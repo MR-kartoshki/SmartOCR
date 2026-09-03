@@ -13,6 +13,6 @@ pkgbase = smartocr
 	depends = python-onnxruntime
 	depends = python-pymupdf
 	source = smartocr-1.1.0.tar.gz::https://github.com/MR-kartoshki/SmartOCR/archive/refs/tags/v1.1.0.tar.gz
-	sha256sums = SKIP
+	sha256sums = fc4d64dda2164c541641a621a7caefffcc048062f936008fefc1325dd213ee42
 
 pkgname = smartocr

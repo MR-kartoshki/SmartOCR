@@ -17,7 +17,7 @@ makedepends=(
   'python-setuptools'
 )
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('fc4d64dda2164c541641a621a7caefffcc048062f936008fefc1325dd213ee42')
 
 build() {
   cd "SmartOCR-$pkgver"

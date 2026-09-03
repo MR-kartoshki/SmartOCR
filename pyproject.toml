@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smartocr"
+version = "1.0.0"
+description = "Fast local OCR CLI using PaddleOCR and ONNX Runtime"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "MR-Kartoshki" }]
+dependencies = [
+    "paddleocr>=3.7,<4",
+    "onnxruntime>=1.29,<2",
+]
+
+[project.scripts]
+smartocr = "smartocr:main"
+
+[tool.setuptools]
+py-modules = ["smartocr"]

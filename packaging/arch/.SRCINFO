@@ -1,0 +1,17 @@
+pkgbase = smartocr
+	pkgdesc = Fast local OCR CLI using PaddleOCR and ONNX Runtime
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/MR-kartoshki/smartocr
+	arch = x86_64
+	license = MIT
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-setuptools
+	depends = python
+	depends = python-paddleocr
+	depends = python-onnxruntime
+	source = smartocr-1.0.0.tar.gz::https://github.com/MR-kartoshki/smartocr/archive/refs/tags/v1.0.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = smartocr

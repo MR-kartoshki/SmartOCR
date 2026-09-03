@@ -33,16 +33,18 @@ virtual `python-onnxruntime` package. During installation, pacman will let you
 choose one of its providers:
 
 - `python-onnxruntime-cuda` for NVIDIA GPUs
+- `python-onnxruntime-opt-cuda` for NVIDIA GPUs with AVX2 CPU optimizations
 - `python-onnxruntime-rocm` for AMD GPUs (experimental and untested)
+- `python-onnxruntime-opt-rocm` for AMD GPUs with AVX2 CPU optimizations (experimental and untested)
 - `python-onnxruntime-cpu` for CPU-only systems
 
-The GPU runtime packages supply their accelerator dependencies, so CUDA,
-cuDNN, and ROCm do not need to be listed as direct smartocr dependencies.
+The `-opt` variants use the same CUDA or ROCm backend as their regular
+counterparts, but compile ONNX Runtime's CPU code for AVX2-capable processors, potentially increasing performance.
 
-`python-rapidocr` is currently an AUR dependency. PDF input additionally uses
-the official-repository `python-pymupdf` package.
+The smartocr AUR package is not published yet because new AUR account
+registration is temporarily closed.
 
-Install through the AUR, or build the provided `PKGBUILD` with `makepkg`.
+Until it is published, build the provided `PKGBUILD` with `makepkg`.
 
 ## License
 

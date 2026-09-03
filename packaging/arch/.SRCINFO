@@ -1,6 +1,6 @@
 pkgbase = smartocr
-	pkgdesc = Fast local OCR CLI using PaddleOCR and ONNX Runtime
-	pkgver = 1.0.0
+	pkgdesc = Fast local OCR CLI using RapidOCR and ONNX Runtime
+	pkgver = 1.1.0
 	pkgrel = 1
 	url = https://github.com/MR-kartoshki/SmartOCR
 	arch = x86_64
@@ -9,9 +9,10 @@ pkgbase = smartocr
 	makedepends = python-installer
 	makedepends = python-setuptools
 	depends = python
-	depends = python-paddleocr
+	depends = python-rapidocr
 	depends = python-onnxruntime
-	source = smartocr-1.0.0.tar.gz::https://github.com/MR-kartoshki/SmartOCR/archive/refs/tags/v1.0.0.tar.gz
-	sha256sums = 4dc477c79464a73d73f83d6a7b1ae56b63e46488eef34643db9c0ccc08dedd1f
+	depends = python-pymupdf
+	source = smartocr-1.1.0.tar.gz::https://github.com/MR-kartoshki/SmartOCR/archive/refs/tags/v1.1.0.tar.gz
+	sha256sums = SKIP
 
 pkgname = smartocr

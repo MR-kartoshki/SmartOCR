@@ -8,10 +8,9 @@ import statistics
 import sys
 from pathlib import Path
 
-os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
 os.environ.setdefault("ORT_LOG_SEVERITY_LEVEL", "3")
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 LANG_ALIASES = {
     "eng": "en",
@@ -49,7 +48,7 @@ def cleanup_text(text):
         if line.startswith("» "):
             line = "❯ " + line[2:]
 
-        # Paddle sometimes merges terminal art into adjacent "Label: value" text.
+        # OCR sometimes merges terminal art into adjacent "Label: value" text.
         line = decoration_prefix.sub("", line)
 
         if line.strip() == "|":
@@ -73,7 +72,7 @@ def normalize_lang(value):
 
 
 def model_version_for_lang(lang):
-    # PP-OCRv6 has no Russian recognition model yet.
+    # Keep Russian on the existing Cyrillic model.
     return "PP-OCRv5" if lang == "ru" else "PP-OCRv6"
 
 
@@ -107,51 +106,88 @@ def silence_native_output(enabled=True):
         os.close(saved_stderr)
 
 
-def create_engine(lang, device, debug=False):
+def model_cache_dir():
+    cache_home = os.environ.get("XDG_CACHE_HOME")
+
+    if cache_home:
+        return Path(cache_home) / "smartocr" / "models"
+
+    return Path.home() / ".cache" / "smartocr" / "models"
+
+
+def create_engine(lang, provider, debug=False):
     try:
-        from paddleocr import PaddleOCR
+        import onnxruntime
+        from rapidocr import (
+            LangDet,
+            LangRec,
+            ModelType,
+            OCRVersion,
+            RapidOCR,
+        )
     except Exception as exc:
         die(
-            "PaddleOCR could not be imported:\n"
+            "RapidOCR or ONNX Runtime could not be imported:\n"
             f"{exc}"
         )
 
     version = model_version_for_lang(lang)
+    device = "cpu" if provider == "CPUExecutionProvider" else "gpu:0"
 
     if debug:
         print(
             f"[engine] model={version} lang={lang} "
-            f"engine=onnxruntime device={device}",
+            f"engine=rapidocr provider={provider} device={device}",
             file=sys.stderr,
         )
 
-    kwargs = dict(
-        lang=lang,
-        ocr_version=version,
-        use_doc_orientation_classify=False,
-        use_doc_unwarping=False,
-        use_textline_orientation=False,
-        engine="onnxruntime",
-        device=device,
-    )
+    params = {
+        "Global.use_cls": False,
+        "Global.log_level": "debug" if debug else "error",
+        "Global.model_root_dir": str(model_cache_dir()),
+    }
+
+    if lang == "ru":
+        params.update({
+            "Det.ocr_version": OCRVersion.PPOCRV5,
+            "Det.lang_type": LangDet.CH,
+            "Det.model_type": ModelType.SERVER,
+            "Rec.ocr_version": OCRVersion.PPOCRV5,
+            "Rec.lang_type": LangRec.CYRILLIC,
+            "Rec.model_type": ModelType.MOBILE,
+        })
+    else:
+        params.update({
+            "Det.ocr_version": OCRVersion.PPOCRV6,
+            "Det.lang_type": LangDet.EN,
+            "Det.model_type": ModelType.MEDIUM,
+            "Rec.ocr_version": OCRVersion.PPOCRV6,
+            "Rec.lang_type": LangRec.EN,
+            "Rec.model_type": ModelType.MEDIUM,
+        })
 
     with silence_native_output(enabled=not debug):
-        return PaddleOCR(**kwargs)
+        engine = RapidOCR(params=params)
 
+        if provider != "CPUExecutionProvider":
+            # RapidOCR 3.x does not expose ROCm in its provider configuration.
+            for component_name in ("text_det", "text_rec"):
+                component = getattr(engine, component_name)
+                current = component.session.session
+                session = onnxruntime.InferenceSession(
+                    current._model_path,
+                    sess_options=current.get_session_options(),
+                    providers=[provider],
+                )
 
-def get_payload(result):
-    data = result.json
+                if session.get_providers()[0] != provider:
+                    raise RuntimeError(
+                        f"failed to activate {provider}"
+                    )
 
-    if callable(data):
-        data = data()
+                component.session.session = session
 
-    if not isinstance(data, dict):
-        return {}
-
-    if isinstance(data.get("res"), dict):
-        return data["res"]
-
-    return data
+    return engine
 
 
 def as_list(value):
@@ -336,20 +372,12 @@ def reconstruct_text(texts, boxes):
 
 
 def extract_result(result):
-    payload = get_payload(result)
-
-    texts = as_list(payload.get("rec_texts"))
+    texts = as_list(getattr(result, "txts", None))
     scores = [
         float(score)
-        for score in as_list(payload.get("rec_scores"))
+        for score in as_list(getattr(result, "scores", None))
     ]
-
-    raw_boxes = payload.get("rec_boxes")
-
-    if raw_boxes is None:
-        raw_boxes = payload.get("rec_polys")
-
-    boxes = as_list(raw_boxes)
+    boxes = as_list(getattr(result, "boxes", None))
 
     return {
         "text": reconstruct_text(texts, boxes),
@@ -384,12 +412,32 @@ def execution_backends(force_cpu=False):
     ]
 
 
+def load_inputs(image):
+    if image.suffix.lower() != ".pdf":
+        return [str(image)]
+
+    try:
+        import pymupdf
+    except Exception as exc:
+        die(f"PDF support could not be loaded: {exc}")
+
+    try:
+        with pymupdf.open(image) as document:
+            return [
+                page.get_pixmap(dpi=150, alpha=False).tobytes("png")
+                for page in document
+            ]
+    except Exception as exc:
+        die(f"could not read PDF: {exc}")
+
+
 def run_ocr(image, lang, force_cpu=False, debug=False):
     backends = execution_backends(force_cpu)
 
     if not backends:
         die("no supported ONNX Runtime execution provider found")
 
+    inputs = load_inputs(image)
     last_error = None
 
     for index, (provider, device) in enumerate(backends):
@@ -402,7 +450,7 @@ def run_ocr(image, lang, force_cpu=False, debug=False):
 
             engine = create_engine(
                 lang,
-                device,
+                provider,
                 debug=debug,
             )
 
@@ -412,9 +460,7 @@ def run_ocr(image, lang, force_cpu=False, debug=False):
                     file=sys.stderr,
                 )
 
-            results = list(
-                engine.predict(str(image))
-            )
+            results = [engine(item) for item in inputs]
 
             extracted = [
                 extract_result(result)
@@ -439,6 +485,9 @@ def run_ocr(image, lang, force_cpu=False, debug=False):
             )
 
             if not text:
+                if device == "gpu:0" and index + 1 < len(backends):
+                    raise RuntimeError("no OCR result returned")
+
                 die("no text detected", 2)
 
             return {
@@ -495,7 +544,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog="smartocr",
         description=(
-            "GPU-first local OCR using PaddleOCR "
+            "GPU-first local OCR using RapidOCR "
             "and ONNX Runtime."
         ),
     )

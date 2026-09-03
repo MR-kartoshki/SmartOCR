@@ -1,6 +1,6 @@
 # smartocr
 
-Fast local OCR from the command line using PaddleOCR and ONNX Runtime.
+Fast local OCR from the command line using RapidOCR and ONNX Runtime.
 
 ```console
 $ smartocr screenshot.png
@@ -19,6 +19,8 @@ smartocr IMAGE --debug
 ```
 
 English and German use PP-OCRv6. Russian currently uses PP-OCRv5.
+Models that are not bundled with RapidOCR are downloaded on first use to
+`$XDG_CACHE_HOME/smartocr/models` (or `~/.cache/smartocr/models`).
 
 smartocr selects an available ONNX Runtime backend in this order: CUDA, ROCm,
 then CPU. If GPU inference fails, it tries the next available backend and
@@ -36,6 +38,9 @@ choose one of its providers:
 
 The GPU runtime packages supply their accelerator dependencies, so CUDA,
 cuDNN, and ROCm do not need to be listed as direct smartocr dependencies.
+
+`python-rapidocr` is currently an AUR dependency. PDF input additionally uses
+the official-repository `python-pymupdf` package.
 
 Install through the AUR, or build the provided `PKGBUILD` with `makepkg`.
 

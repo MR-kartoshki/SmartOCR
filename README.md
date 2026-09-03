@@ -13,12 +13,38 @@ extracted text...
 smartocr IMAGE
 smartocr IMAGE -l de
 smartocr IMAGE -l ru
+smartocr IMAGE -l ja
+smartocr IMAGE -l ar
+smartocr --list-languages
 smartocr IMAGE -o output.txt
 smartocr IMAGE --cpu
 smartocr IMAGE --debug
 ```
 
-English and German use PP-OCRv6. Russian currently uses PP-OCRv5.
+Supported languages:
+
+- European and Latin-script: Azerbaijani (`az`), Czech (`cs`), Danish (`da`),
+  Dutch (`nl`), English (`en`), Finnish (`fi`), French (`fr`), German (`de`),
+  Hungarian (`hu`), Indonesian (`id`), Italian (`it`), Malay (`ms`), Norwegian
+  (`no`), Polish (`pl`), Portuguese (`pt`), Romanian (`ro`), Serbian Latin
+  (`sr-latn`), Spanish (`es`), Swedish (`sv`), Swahili (`sw`), Tagalog (`tl`),
+  Turkish (`tr`), Uzbek (`uz`), Vietnamese (`vi`), and Kurdish Latin (`ku-latn`)
+- Cyrillic: Belarusian (`be`), Bulgarian (`bg`), Kazakh (`kk`), Kyrgyz (`ky`),
+  Macedonian (`mk`), Mongolian (`mn`), Russian (`ru`), Serbian (`sr`), Tajik
+  (`tg`), and Ukrainian (`uk`)
+- Arabic script: Arabic (`ar`), Persian (`fa`), Kurdish (`ku`), Pashto (`ps`),
+  Sindhi (`sd`), Uyghur (`ug`), and Urdu (`ur`)
+- South Asian: Hindi (`hi`), Marathi (`mr`), Nepali (`ne`), Bhojpuri (`bho`),
+  Kannada (`kn`), Tamil (`ta`), and Telugu (`te`)
+- East Asian: Simplified Chinese (`zh`), Traditional Chinese (`zh-tw`), Japanese
+  (`ja`), and Korean (`ko`)
+- Greek (`el`) and Thai (`th`)
+
+Common English names and ISO 639-2 codes such as `english`, `eng`, `german`,
+`deu`, and `jpn` are also accepted.
+
+Latin-script, Chinese, and Japanese languages use PP-OCRv6. Most other scripts
+use PP-OCRv5; Kannada uses PP-OCRv4 because it is the latest compatible model.
 Models that are not bundled with RapidOCR are downloaded on first use to
 `$XDG_CACHE_HOME/smartocr/models` (or `~/.cache/smartocr/models`).
 

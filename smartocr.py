@@ -12,17 +12,179 @@ os.environ.setdefault("ORT_LOG_SEVERITY_LEVEL", "3")
 
 __version__ = "1.1.0"
 
-LANG_ALIASES = {
-    "eng": "en",
-    "english": "en",
-    "en": "en",
-    "deu": "de",
-    "german": "de",
-    "de": "de",
-    "rus": "ru",
-    "russian": "ru",
-    "ru": "ru",
+LANGUAGE_NAMES = {
+    "ar": "Arabic",
+    "az": "Azerbaijani",
+    "be": "Belarusian",
+    "bg": "Bulgarian",
+    "bho": "Bhojpuri",
+    "cs": "Czech",
+    "da": "Danish",
+    "de": "German",
+    "el": "Greek",
+    "en": "English",
+    "es": "Spanish",
+    "fa": "Persian",
+    "fi": "Finnish",
+    "fr": "French",
+    "hi": "Hindi",
+    "hu": "Hungarian",
+    "id": "Indonesian",
+    "it": "Italian",
+    "ja": "Japanese",
+    "kk": "Kazakh",
+    "kn": "Kannada",
+    "ko": "Korean",
+    "ku": "Kurdish (Arabic script)",
+    "ku-latn": "Kurdish (Latin script)",
+    "ky": "Kyrgyz",
+    "mk": "Macedonian",
+    "mn": "Mongolian",
+    "mr": "Marathi",
+    "ms": "Malay",
+    "ne": "Nepali",
+    "nl": "Dutch",
+    "no": "Norwegian",
+    "pl": "Polish",
+    "ps": "Pashto",
+    "pt": "Portuguese",
+    "ro": "Romanian",
+    "ru": "Russian",
+    "sd": "Sindhi",
+    "sr": "Serbian (Cyrillic)",
+    "sr-latn": "Serbian (Latin)",
+    "sv": "Swedish",
+    "sw": "Swahili",
+    "ta": "Tamil",
+    "te": "Telugu",
+    "tg": "Tajik",
+    "th": "Thai",
+    "tl": "Tagalog",
+    "tr": "Turkish",
+    "ug": "Uyghur",
+    "uk": "Ukrainian",
+    "ur": "Urdu",
+    "uz": "Uzbek",
+    "vi": "Vietnamese",
+    "zh": "Chinese (Simplified)",
+    "zh-tw": "Chinese (Traditional)",
 }
+
+LANG_ALIASES = {
+    **{code: code for code in LANGUAGE_NAMES},
+    **{name.lower(): code for code, name in LANGUAGE_NAMES.items()},
+    "ara": "ar",
+    "aze": "az",
+    "bel": "be",
+    "bul": "bg",
+    "ces": "cs",
+    "chi": "zh",
+    "chinese": "zh",
+    "dan": "da",
+    "eng": "en",
+    "deu": "de",
+    "dut": "nl",
+    "ell": "el",
+    "fas": "fa",
+    "fin": "fi",
+    "fra": "fr",
+    "fre": "fr",
+    "gre": "el",
+    "hin": "hi",
+    "hun": "hu",
+    "ind": "id",
+    "ita": "it",
+    "jpn": "ja",
+    "kan": "kn",
+    "kaz": "kk",
+    "kir": "ky",
+    "kor": "ko",
+    "kur": "ku",
+    "kurdish": "ku",
+    "mac": "mk",
+    "mar": "mr",
+    "may": "ms",
+    "mkd": "mk",
+    "mon": "mn",
+    "msa": "ms",
+    "nep": "ne",
+    "nld": "nl",
+    "nor": "no",
+    "pes": "fa",
+    "pol": "pl",
+    "por": "pt",
+    "pus": "ps",
+    "ron": "ro",
+    "rum": "ro",
+    "rus": "ru",
+    "serbian": "sr",
+    "simplified chinese": "zh",
+    "snd": "sd",
+    "spa": "es",
+    "srp": "sr",
+    "swe": "sv",
+    "swa": "sw",
+    "tam": "ta",
+    "tel": "te",
+    "tgk": "tg",
+    "tgl": "tl",
+    "tha": "th",
+    "traditional chinese": "zh-tw",
+    "tur": "tr",
+    "uig": "ug",
+    "ukr": "uk",
+    "urd": "ur",
+    "uzb": "uz",
+    "vie": "vi",
+    "zho": "zh",
+    "zh-cn": "zh",
+    "zh-hans": "zh",
+    "zh-hant": "zh-tw",
+    "zh-tw": "zh-tw",
+}
+
+PP_OCRV4_REC_LANGS = {
+    "kn": "ka",
+}
+
+PP_OCRV5_REC_LANGS = {
+    "ar": "arabic",
+    "be": "cyrillic",
+    "bg": "cyrillic",
+    "bho": "devanagari",
+    "el": "el",
+    "fa": "arabic",
+    "hi": "devanagari",
+    "kk": "cyrillic",
+    "ko": "korean",
+    "ku": "arabic",
+    "ky": "cyrillic",
+    "mk": "cyrillic",
+    "mn": "cyrillic",
+    "mr": "devanagari",
+    "ne": "devanagari",
+    "ps": "arabic",
+    "ru": "cyrillic",
+    "sd": "arabic",
+    "sr": "cyrillic",
+    "ta": "ta",
+    "te": "te",
+    "tg": "cyrillic",
+    "th": "th",
+    "ug": "arabic",
+    "uk": "cyrillic",
+    "ur": "arabic",
+}
+
+PP_OCRV6_LANG_TYPES = {
+    "ja": "japan",
+    "ku-latn": "ku",
+    "sr-latn": "rs_latin",
+    "zh": "ch",
+    "zh-tw": "chinese_cht",
+}
+
+RTL_LANGS = {"ar", "fa", "ku", "ps", "sd", "ug", "ur"}
 
 
 def die(message, code=1):
@@ -65,15 +227,30 @@ def normalize_lang(value):
     if key not in LANG_ALIASES:
         die(
             f"unsupported language '{value}'. "
-            "Use en/eng, de/deu, or ru/rus."
+            "Run 'smartocr --list-languages' to see supported codes."
         )
 
     return LANG_ALIASES[key]
 
 
 def model_version_for_lang(lang):
-    # Keep Russian on the existing Cyrillic model.
-    return "PP-OCRv5" if lang == "ru" else "PP-OCRv6"
+    if lang in PP_OCRV4_REC_LANGS:
+        return "PP-OCRv4"
+
+    if lang in PP_OCRV5_REC_LANGS:
+        return "PP-OCRv5"
+
+    return "PP-OCRv6"
+
+
+def rec_lang_for_lang(lang):
+    if lang in PP_OCRV4_REC_LANGS:
+        return PP_OCRV4_REC_LANGS[lang]
+
+    if lang in PP_OCRV5_REC_LANGS:
+        return PP_OCRV5_REC_LANGS[lang]
+
+    return PP_OCRV6_LANG_TYPES.get(lang, lang)
 
 
 @contextlib.contextmanager
@@ -147,22 +324,28 @@ def create_engine(lang, provider, debug=False):
         "Global.model_root_dir": str(model_cache_dir()),
     }
 
-    if lang == "ru":
+    if version in {"PP-OCRv4", "PP-OCRv5"}:
+        ocr_version = (
+            OCRVersion.PPOCRV4
+            if version == "PP-OCRv4"
+            else OCRVersion.PPOCRV5
+        )
         params.update({
-            "Det.ocr_version": OCRVersion.PPOCRV5,
+            "Det.ocr_version": ocr_version,
             "Det.lang_type": LangDet.CH,
             "Det.model_type": ModelType.SERVER,
-            "Rec.ocr_version": OCRVersion.PPOCRV5,
-            "Rec.lang_type": LangRec.CYRILLIC,
+            "Rec.ocr_version": ocr_version,
+            "Rec.lang_type": LangRec(rec_lang_for_lang(lang)),
             "Rec.model_type": ModelType.MOBILE,
         })
     else:
+        rec_lang = rec_lang_for_lang(lang)
         params.update({
             "Det.ocr_version": OCRVersion.PPOCRV6,
-            "Det.lang_type": LangDet.EN,
+            "Det.lang_type": rec_lang,
             "Det.model_type": ModelType.MEDIUM,
             "Rec.ocr_version": OCRVersion.PPOCRV6,
-            "Rec.lang_type": LangRec.EN,
+            "Rec.lang_type": rec_lang,
             "Rec.model_type": ModelType.MEDIUM,
         })
 
@@ -219,7 +402,7 @@ def box_bounds(box):
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def reconstruct_text(texts, boxes):
+def reconstruct_text(texts, boxes, rtl=False):
     if not texts:
         return ""
 
@@ -336,6 +519,12 @@ def reconstruct_text(texts, boxes):
 
         segments.append(current)
 
+        if rtl:
+            segments = [
+                list(reversed(segment))
+                for segment in reversed(segments)
+            ]
+
         segment_texts = [
             " ".join(
                 part["text"]
@@ -371,7 +560,7 @@ def reconstruct_text(texts, boxes):
     )
 
 
-def extract_result(result):
+def extract_result(result, rtl=False):
     texts = as_list(getattr(result, "txts", None))
     scores = [
         float(score)
@@ -380,7 +569,7 @@ def extract_result(result):
     boxes = as_list(getattr(result, "boxes", None))
 
     return {
-        "text": reconstruct_text(texts, boxes),
+        "text": reconstruct_text(texts, boxes, rtl=rtl),
         "scores": scores,
         "count": len(
             [text for text in texts if str(text).strip()]
@@ -463,7 +652,7 @@ def run_ocr(image, lang, force_cpu=False, debug=False):
             results = [engine(item) for item in inputs]
 
             extracted = [
-                extract_result(result)
+                extract_result(result, rtl=lang in RTL_LANGS)
                 for result in results
             ]
 
@@ -557,6 +746,7 @@ def main():
 
     parser.add_argument(
         "image",
+        nargs="?",
         help="image or PDF to OCR",
     )
 
@@ -565,9 +755,14 @@ def main():
         "--lang",
         default="en",
         help=(
-            "OCR language: en/eng, de/deu, ru/rus "
-            "(default: en)"
+            "OCR language code (see README; default: en)"
         ),
+    )
+
+    parser.add_argument(
+        "--list-languages",
+        action="store_true",
+        help="list supported language codes and exit",
     )
 
     parser.add_argument(
@@ -601,6 +796,14 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.list_languages:
+        for code, name in LANGUAGE_NAMES.items():
+            print(f"{code:<8} {name}")
+        return
+
+    if not args.image:
+        parser.error("the following arguments are required: image")
 
     image = Path(
         args.image
